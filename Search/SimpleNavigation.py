@@ -14,6 +14,9 @@
 # Grid format:
 #   0 = Navigable space
 #   1 = Occupied space
+
+# KAV: 1) we have to add a mechanism of sorting which would allow to expand cells with the smallest value first
+#       2) cost is not equal to the delta of step
 grid = [[0, 0, 1, 0, 0, 0],
         [0, 0, 1, 0, 0, 0],
         [0, 0, 0, 0, 1, 0],
