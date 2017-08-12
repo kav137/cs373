@@ -11,9 +11,9 @@
 
 grid = [[0, 1, 0, 0, 0, 0],
         [0, 1, 0, 0, 0, 0],
+        [1, 1, 0, 0, 0, 0],
         [0, 1, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 0]]
+        [0, 1, 0, 0, 1, 0]]
 goal = [len(grid) - 1, len(grid[0]) - 1]
 cost = 1  # the cost associated with moving from a cell to an adjacent one
 
@@ -28,11 +28,6 @@ delta_name = ['^', '<', 'v', '>']
 def compute_value(grid, goal, cost):
     value_grid = [[0] * len(grid[0]) for row in range(len(grid))]
     closed_grid = [[False] * len(grid[0]) for row in range(len(grid))]
-
-    # for row in value_grid:
-    #     for col in value_grid:
-    #         if grid[row][col] == 1:
-    #             value_grid[row][col] = 99
 
     count = 0
     open = [goal]
@@ -52,14 +47,17 @@ def compute_value(grid, goal, cost):
                 row_delta, col_delta = move
                 new_row = row - row_delta
                 new_col = col - col_delta
-                if 0 <= new_row < rows_total and 0 <= new_col < cols_total:
-                    if grid[new_row][new_col] == 1:
-                        value_grid[new_row][new_col] = 99
-                    elif not (closed_grid[new_row][new_col]):
-                        new_open.append([new_row, new_col])
+                if 0 <= new_row < rows_total and 0 <= new_col < cols_total and grid[new_row][new_col] != 1 and not (
+                        closed_grid[new_row][new_col]):
+                    new_open.append([new_row, new_col])
 
         count += cost
-        open = new_open[:]
+        open = new_open
+
+    for row in range(len(value_grid)):
+        for col in range(len(value_grid[0])):
+            if grid[row][col] == 1 or (value_grid[row][col] == 0 and not (row == goal[0] and col == goal[1])):
+                value_grid[row][col] = 99
 
     return value_grid
 
