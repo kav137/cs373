@@ -51,6 +51,7 @@ def optimum_policy2D(grid, init, goal, cost):
     cols_total = len(grid[0])
 
     policy2D = [[' '] * cols_total for row in range(rows_total)]
+    actions_grid = [[[] for col in range(cols_total)] for row in range(rows_total)]  # storage for actions we perform
     m_costs_grid = [[999] * cols_total for row in range(rows_total)]  # movement
     h_costs_grid = [[999] * cols_total for row in range(rows_total)]  # heuristic
 
@@ -80,18 +81,19 @@ def optimum_policy2D(grid, init, goal, cost):
     init_t_cost = init_m_cost + init_h_cost
 
     m_costs_grid[init_x][init_y] = init_m_cost
-    open_cells = [[init_t_cost, init_m_cost, init_x, init_y, init_theta]]
+    open_cells = [[init_t_cost, init_m_cost, init_x, init_y, init_theta, None, None]]
 
     while len(open_cells) > 0 and not found:
         open_cells.sort()
         open_cells.reverse()
 
         cell = open_cells.pop()
-        t_cost1, m_cost1, x1, y1, theta1 = cell
+        t_cost1, m_cost1, x1, y1, theta1, prev_action_name, prev_movement = cell
+
+        (actions_grid[x1][y1]).append([prev_action_name, prev_movement])
 
         if x1 == target_x and y1 == target_y:
             found = True
-            policy2D[x1][y1] = '*'
 
         else:
             for i in range(len(action)):
@@ -108,10 +110,21 @@ def optimum_policy2D(grid, init, goal, cost):
                     m_cost2 = m_cost1 + cost[i]
                     m_costs_grid[x2][y2] = m_cost2
                     t_cost2 = m_cost2 + h_costs_grid[x2][y2]
-                    policy2D[x1][y1] = current_action_name
-                    open_cells.append([t_cost2, m_cost2, x2, y2, theta2])
+                    open_cells.append([t_cost2, m_cost2, x2, y2, theta2, current_action_name, movement_to_apply])
 
-    return [policy2D, m_costs_grid]
+    # building path
+    next_action, next_reverse_movement = actions_grid[target_x][target_y].pop()
+    policy2D[target_x][target_y] = '*'
+    x1 = target_x
+    y1 = target_y
+    while next_reverse_movement:
+        x_delta, y_delta = next_reverse_movement
+        x1 -= x_delta
+        y1 -= y_delta
+        policy2D[x1][y1] = next_action
+        next_action, next_reverse_movement = actions_grid[x1][y1].pop()
+
+    return [actions_grid, m_costs_grid, policy2D]
 
 
 result = optimum_policy2D(grid, init, goal, cost)
@@ -120,7 +133,6 @@ for res_grid in result:
     for row in res_grid:
         print row
     print '***********'
-
 
     # EXAMPLE OUTPUT:
     # calling optimum_policy2D with the given parameters should return
