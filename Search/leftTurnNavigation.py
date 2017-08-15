@@ -51,19 +51,43 @@ def optimum_policy2D(grid, init, goal, cost):
     cols_total = len(grid[0])
 
     policy2D = [[' '] * cols_total for row in range(rows_total)]
-    costs_grid = [[999] * cols_total for row in range(rows_total)]
+    m_costs_grid = [[999] * cols_total for row in range(rows_total)]  # movement
+    h_costs_grid = [[999] * cols_total for row in range(rows_total)]  # heuristic
 
-    init_cost = 0
+    # fill the heuristics grid
+    h_open_cells = [[0, target_x, target_y]]
+    while len(h_open_cells) > 0:
+        count, h_x, h_y = h_open_cells.pop()
+        if h_costs_grid[h_x][h_y] > count:
+            h_costs_grid[h_x][h_y] = count
+            for i in range(len(forward)):
+                x_delta, y_delta = forward[i]
+                x2 = h_x + x_delta
+                y2 = h_y + y_delta
+                if 0 <= x2 < rows_total and 0 <= y2 < cols_total and grid[x2][y2] != 1:
+                    h_open_cells.append([count + 1, x2, y2])
+
+    for r in h_costs_grid:
+        print r
+    print '********'
+
     init_x, init_y, init_theta = init
-    costs_grid[init_x][init_y] = init_cost
-    open_cells = [[init_cost, init_x, init_y, init_theta]]
+
+    # there are three type of costs: movement (m_cost); h_costs_grid (h_cost); total (t_cost)
+    # t_cost is used for comparison
+    init_m_cost = 0
+    init_h_cost = h_costs_grid[init_x][init_y]
+    init_t_cost = init_m_cost + init_h_cost
+
+    m_costs_grid[init_x][init_y] = init_m_cost
+    open_cells = [[init_t_cost, init_m_cost, init_x, init_y, init_theta]]
 
     while len(open_cells) > 0 and not found:
         open_cells.sort()
         open_cells.reverse()
 
         cell = open_cells.pop()
-        cost1, x1, y1, theta1 = cell
+        t_cost1, m_cost1, x1, y1, theta1 = cell
 
         if x1 == target_x and y1 == target_y:
             found = True
@@ -74,19 +98,20 @@ def optimum_policy2D(grid, init, goal, cost):
                 current_action = action[i]
                 current_action_name = action_name[i]
 
-                cost2 = cost1 + cost[i]
                 theta2 = (theta1 + current_action) % len(forward)
                 movement_to_apply = forward[theta2]
 
                 x2 = x1 + movement_to_apply[0]
                 y2 = y1 + movement_to_apply[1]
 
-                if 0 <= x2 < rows_total and 0 <= y2 < cols_total and grid[x2][y2] != 1 and costs_grid[x2][y2] > cost2:
+                if 0 <= x2 < rows_total and 0 <= y2 < cols_total and grid[x2][y2] != 1:
+                    m_cost2 = m_cost1 + cost[i]
+                    m_costs_grid[x2][y2] = m_cost2
+                    t_cost2 = m_cost2 + h_costs_grid[x2][y2]
                     policy2D[x1][y1] = current_action_name
-                    costs_grid[x2][y2] = cost2
-                    open_cells.append([cost2, x2, y2, theta2])
+                    open_cells.append([t_cost2, m_cost2, x2, y2, theta2])
 
-    return [policy2D, costs_grid]
+    return [policy2D, m_costs_grid]
 
 
 result = optimum_policy2D(grid, init, goal, cost)
